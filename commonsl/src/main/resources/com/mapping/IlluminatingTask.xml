@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.commonsl.dao.IlluminatingTaskDao">
+
+	<insert id="save" useGeneratedKeys="true" keyProperty="id" parameterType="com.commonsl.model.IlluminatingTask">
+		INSERT INTO ILLUMINATING_TASK (
+			ID, CLOSE_TIME, DEVICE_ID, FLASH, GROUP_NAME, ILLUMINATING_BRIGHTNESS, ILLUMINATING_TASK_NAME, OPEN_TIME, PLAY_DATE, STATE
+		) VALUES (
+			#{id}, #{closeTime}, #{deviceId}, #{flash}, #{groupName}, #{illuminatingBrightness}, #{illuminatingTaskName}, #{openTime}, #{playDate}, #{state}
+		)
+	</insert>
+
+	<delete id="delete" parameterType="com.commonsl.model.IlluminatingTask">
+		DELETE FROM ILLUMINATING_TASK <include refid="CriteriaSQL" />
+	</delete>
+
+	<update id="update" parameterType="com.commonsl.model.IlluminatingTask">
+		UPDATE ILLUMINATING_TASK <include refid="SetSQL" /> <include refid="CriteriaSQL" />
+	</update>
+  
+	<select id="selectCount" parameterType="com.commonsl.model.IlluminatingTask" resultType="_long">
+		SELECT COUNT(1) FROM ILLUMINATING_TASK <include refid="CriteriaSQL" />
+	</select>
+
+	<select id="selectList" parameterType="com.commonsl.model.IlluminatingTask" resultMap="IlluminatingTaskResultMap">
+		SELECT * FROM ILLUMINATING_TASK <include refid="CriteriaSQL" /> <include refid="OrderbySQL" /> <include refid="LimitSQL" />
+	</select>
+
+	<resultMap id="IlluminatingTaskResultMap" type="com.commonsl.model.IlluminatingTask">
+		<id property="id" column="ID" />
+		<result property="closeTime" column="CLOSE_TIME" />
+		<result property="deviceId" column="DEVICE_ID" />
+		<result property="flash" column="FLASH" />
+		<result property="groupName" column="GROUP_NAME" />
+		<result property="illuminatingBrightness" column="ILLUMINATING_BRIGHTNESS" />
+		<result property="illuminatingTaskName" column="ILLUMINATING_TASK_NAME" />
+		<result property="openTime" column="OPEN_TIME" />
+		<result property="playDate" column="PLAY_DATE" />
+		<result property="state" column="STATE" />
+	</resultMap>
+
+	<sql id="SetSQL">
+		<set>
+			<if test="entity.closeTime != null">CLOSE_TIME = #{entity.closeTime},</if>
+			<if test="entity.deviceId != null">DEVICE_ID = #{entity.deviceId},</if>
+			<if test="entity.flash != null">FLASH = #{entity.flash},</if>
+			<if test="entity.groupName != null">GROUP_NAME = #{entity.groupName},</if>
+			<if test="entity.illuminatingBrightness != null">ILLUMINATING_BRIGHTNESS = #{entity.illuminatingBrightness},</if>
+			<if test="entity.illuminatingTaskName != null">ILLUMINATING_TASK_NAME = #{entity.illuminatingTaskName},</if>
+			<if test="entity.openTime != null">OPEN_TIME = #{entity.openTime},</if>
+			<if test="entity.playDate != null">PLAY_DATE = #{entity.playDate},</if>
+			<if test="entity.state != null">STATE = #{entity.state},</if>
+		</set>
+	</sql>
+
+	<sql id="CriteriaSQL">
+		<where>
+			<if test="criteria != null and criteria.notEmpty">
+				<foreach collection="criteria.criterions" item="criterion">
+					<choose>
+						<when test="criterion.noValue">
+							and ${criterion.field} ${criterion.condition}
+						</when>
+						<when test="criterion.singleValue">
+							and ${criterion.field} ${criterion.condition} #{criterion.value}
+						</when>
+						<when test="criterion.betweenValue">
+							and ${criterion.field} ${criterion.condition} #{criterion.value} and #{criterion.value2}
+						</when>
+						<when test="criterion.listValue">
+							and ${criterion.field} ${criterion.condition}
+							<foreach collection="criterion.value" item="item" open="(" separator="," close=")">
+								#{item}
+							</foreach>
+						</when>
+					</choose>
+				</foreach>
+			</if>
+		</where>
+	</sql>
+
+	<sql id="OrderbySQL">
+		<if test="criteria != null and criteria.orderly">
+			ORDER BY 
+			<foreach collection="criteria.orderbies" item="orderby" separator=",">
+				${orderby.field} ${orderby.value}
+			</foreach>
+		</if>
+	</sql>
+
+	<sql id="LimitSQL">
+		<if test="criteria != null and criteria.pagination">
+			LIMIT #{criteria.limit.value}, #{criteria.limit.value2}
+		</if>
+	</sql>
+
+</mapper>

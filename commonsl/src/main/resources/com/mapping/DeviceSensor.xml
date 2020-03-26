@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.commonsl.dao.DeviceSensorDao">
+
+	<insert id="save" useGeneratedKeys="true" keyProperty="id" parameterType="com.commonsl.model.DeviceSensor">
+		INSERT INTO DEVICE_SENSOR (
+			ID, BODY_INDUCTOR, DEVICE_ID, HUMIDITY, ILLUMINATING_BRIGHTNESS, LATLNG, OPTICAL_INDUCTOR, PM25, SMOKE_SENSORS, TEMPERATURE
+		) VALUES (
+			#{id}, #{bodyInductor}, #{deviceId}, #{humidity}, #{illuminatingBrightness}, #{latlng}, #{opticalInductor}, #{pm25}, #{smokeSensors}, #{temperature}
+		)
+	</insert>
+
+	<delete id="delete" parameterType="com.commonsl.model.DeviceSensor">
+		DELETE FROM DEVICE_SENSOR <include refid="CriteriaSQL" />
+	</delete>
+
+	<update id="update" parameterType="com.commonsl.model.DeviceSensor">
+		UPDATE DEVICE_SENSOR <include refid="SetSQL" /> <include refid="CriteriaSQL" />
+	</update>
+  
+	<select id="selectCount" parameterType="com.commonsl.model.DeviceSensor" resultType="_long">
+		SELECT COUNT(1) FROM DEVICE_SENSOR <include refid="CriteriaSQL" />
+	</select>
+
+	<select id="selectList" parameterType="com.commonsl.model.DeviceSensor" resultMap="DeviceSensorResultMap">
+		SELECT * FROM DEVICE_SENSOR <include refid="CriteriaSQL" /> <include refid="OrderbySQL" /> <include refid="LimitSQL" />
+	</select>
+
+	<resultMap id="DeviceSensorResultMap" type="com.commonsl.model.DeviceSensor">
+		<id property="id" column="ID" />
+		<result property="bodyInductor" column="BODY_INDUCTOR" />
+		<result property="deviceId" column="DEVICE_ID" />
+		<result property="humidity" column="HUMIDITY" />
+		<result property="illuminatingBrightness" column="ILLUMINATING_BRIGHTNESS" />
+		<result property="latlng" column="LATLNG" />
+		<result property="opticalInductor" column="OPTICAL_INDUCTOR" />
+		<result property="pm25" column="PM25" />
+		<result property="smokeSensors" column="SMOKE_SENSORS" />
+		<result property="temperature" column="TEMPERATURE" />
+	</resultMap>
+
+	<sql id="SetSQL">
+		<set>
+			<if test="entity.bodyInductor != null">BODY_INDUCTOR = #{entity.bodyInductor},</if>
+			<if test="entity.deviceId != null">DEVICE_ID = #{entity.deviceId},</if>
+			<if test="entity.humidity != null">HUMIDITY = #{entity.humidity},</if>
+			<if test="entity.illuminatingBrightness != null">ILLUMINATING_BRIGHTNESS = #{entity.illuminatingBrightness},</if>
+			<if test="entity.latlng != null">LATLNG = #{entity.latlng},</if>
+			<if test="entity.opticalInductor != null">OPTICAL_INDUCTOR = #{entity.opticalInductor},</if>
+			<if test="entity.pm25 != null">PM25 = #{entity.pm25},</if>
+			<if test="entity.smokeSensors != null">SMOKE_SENSORS = #{entity.smokeSensors},</if>
+			<if test="entity.temperature != null">TEMPERATURE = #{entity.temperature},</if>
+		</set>
+	</sql>
+
+	<sql id="CriteriaSQL">
+		<where>
+			<if test="criteria != null and criteria.notEmpty">
+				<foreach collection="criteria.criterions" item="criterion">
+					<choose>
+						<when test="criterion.noValue">
+							and ${criterion.field} ${criterion.condition}
+						</when>
+						<when test="criterion.singleValue">
+							and ${criterion.field} ${criterion.condition} #{criterion.value}
+						</when>
+						<when test="criterion.betweenValue">
+							and ${criterion.field} ${criterion.condition} #{criterion.value} and #{criterion.value2}
+						</when>
+						<when test="criterion.listValue">
+							and ${criterion.field} ${criterion.condition}
+							<foreach collection="criterion.value" item="item" open="(" separator="," close=")">
+								#{item}
+							</foreach>
+						</when>
+					</choose>
+				</foreach>
+			</if>
+		</where>
+	</sql>
+
+	<sql id="OrderbySQL">
+		<if test="criteria != null and criteria.orderly">
+			ORDER BY 
+			<foreach collection="criteria.orderbies" item="orderby" separator=",">
+				${orderby.field} ${orderby.value}
+			</foreach>
+		</if>
+	</sql>
+
+	<sql id="LimitSQL">
+		<if test="criteria != null and criteria.pagination">
+			LIMIT #{criteria.limit.value}, #{criteria.limit.value2}
+		</if>
+	</sql>
+
+</mapper>

@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="GBK"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:p="http://www.springframework.org/schema/p" xmlns:context="http://www.springframework.org/schema/context"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans.xsd
+http://www.springframework.org/schema/context
+http://www.springframework.org/schema/context/spring-context.xsd
+http://www.springframework.org/schema/mvc
+http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+	<!-- 自动扫描controller包下的所有类，使其认为spring mvc的控制器 -->
+	<context:component-scan base-package="com.detection.interfaces" />
+
+	<!--redis订阅的配置-->
+	<bean class="com.commonsl.util.PropertyPlaceholderConfigurerExt">
+		<property name="locations">
+			<array>
+				<value>classpath:jdbc.properties</value>
+				<value>classpath:redis.properties</value>
+				<value>classpath:config.properties</value>
+			</array>
+		</property>
+	</bean>
+
+	<bean id="deviceRegistry" class="com.detection.interfaces.controller.device2tcp.DeviceRegistry">
+	</bean>
+
+	<bean id="userRegistry" class="com.detection.interfaces.controller.user2tcp.UserRegistry">
+	</bean>
+
+
+	<bean id="pusPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+	</bean>
+
+	<!-- 定义Spring Redis连接工厂 -->
+	<bean id="pusConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+		<property name="hostName" value="${redis.host}"/>
+		<property name="port" value="${redis.port}"/>
+		<property name="password" value="${redis.pass}"/>
+		<property name="usePool" value="${redis.usePool}"/>
+		<property name="poolConfig" ref="pusPoolConfig"/>
+		<property name="timeout" value="${redis.timeout}"/>
+		<property name="database" value="${redis.database}"/>
+	</bean>
+
+	<!-- 定义Spring RedisTemplate -->
+	<bean id="pusRedisTemplate" class="org.springframework.data.redis.core.StringRedisTemplate">
+		<qualifier value="pus"/>
+		<property name="connectionFactory"   ref="pusConnectionFactory"/>
+		<!-- 使用string主要是key 在redis端用命令好读 不然默认的序列化没办法读 -->
+		<property name="keySerializer">
+			<bean class="org.springframework.data.redis.serializer.StringRedisSerializer" />
+		</property>
+		<property name="hashKeySerializer">
+			<bean class="org.springframework.data.redis.serializer.StringRedisSerializer" />
+		</property>
+		<property name="valueSerializer">
+			<bean class="org.springframework.data.redis.serializer.StringRedisSerializer" />
+		</property>
+		<property name="hashValueSerializer">
+			<bean class="org.springframework.data.redis.serializer.StringRedisSerializer" />
+		</property>
+	</bean>
+
+	<bean id="serverHandler" class="com.detection.interfaces.controller.mina.ServerHandler">
+		<property name="redisTemplate" ref="pusRedisTemplate"/>
+		<property name="deviceRegistry" ref="deviceRegistry"/>
+		<property name="userRegistry" ref="userRegistry"/>
+	</bean>
+
+	<bean id="redisContainer" class="org.springframework.data.redis.listener.RedisMessageListenerContainer"
+		  destroy-method="destroy">
+		<property name="connectionFactory" ref="pusConnectionFactory" />
+		<property name="taskExecutor">
+			<bean
+					class="org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler">
+				<property name="poolSize" value="3"></property>
+			</bean>
+		</property>
+		<property name="messageListeners">
+			<map>
+				<entry key-ref="serverHandler">
+					<list>
+						<!-- 普通订阅，订阅具体的频道 -->
+
+						<!-- 模式订阅，支持模式匹配订阅，*为模糊匹配符 -->
+
+						<bean class="org.springframework.data.redis.listener.PatternTopic">
+							<constructor-arg value="AudioTimedTask" />
+						</bean>
+
+						<bean class="org.springframework.data.redis.listener.PatternTopic">
+							<constructor-arg value="FmTimedTask" />
+						</bean>
+
+						<bean class="org.springframework.data.redis.listener.PatternTopic">
+							<constructor-arg value="illuminatingTimedTask" />
+						</bean>
+
+						<bean class="org.springframework.data.redis.listener.PatternTopic">
+							<constructor-arg value="control" />
+						</bean>
+
+						<bean class="org.springframework.data.redis.listener.PatternTopic">
+							<constructor-arg value="setDevice" />
+						</bean>
+
+						<bean class="org.springframework.data.redis.listener.PatternTopic">
+							<constructor-arg value="controlPlayAudio" />
+						</bean>
+
+						<bean class="org.springframework.data.redis.listener.PatternTopic">
+							<constructor-arg value="warningNotify" />
+						</bean>
+
+						<!--&lt;!&ndash; 匹配所有频道 &ndash;&gt;-->
+						<!--<bean class="org.springframework.data.redis.listener.PatternTopic">-->
+							<!--<constructor-arg value="__keyevent@0__:expired" />-->
+						<!--</bean>-->
+					</list>
+				</entry>
+			</map>
+		</property>
+	</bean>
+
+
+	<!--mina-->
+
+	<bean class="org.springframework.beans.factory.config.CustomEditorConfigurer">
+		<property name="customEditors">
+			<map>
+				<entry key="java.net.SocketAddress"
+					   value="org.apache.mina.integration.beans.InetSocketAddressEditor">
+				</entry>
+			</map>
+		</property>
+	</bean>
+	<bean id="ioAcceptor" class="org.apache.mina.transport.socket.nio.NioSocketAcceptor"
+		  init-method="bind" destroy-method="unbind">
+		<!--端口号-->
+		<property name="defaultLocalAddress" value=":7777" />
+		<!--绑定自己实现的handler-->
+		<property name="handler" ref="serverHandler" />
+		<!--声明过滤器的集合-->
+		<property name="filterChainBuilder" ref="filterChainBuilder" />
+		<property name="reuseAddress" value="true" />
+	</bean>
+
+	<bean id="filterChainBuilder"
+		  class="org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder">
+		<property name="filters">
+			<map>
+				<!--mina自带的线程池filter-->
+				<entry key="executor" value-ref="executorFilter" />
+				<entry key="mdcInjectionFilter" value-ref="mdcInjectionFilter" />
+				<!--自己实现的编解码器filter-->
+				<entry key="codecFilter" value-ref="codecFilter" />
+				<!--日志的filter-->
+				<entry key="loggingFilter" value-ref="loggingFilter" />
+				<!--心跳filter-->
+				<entry key="keepAliveFilter" value-ref="keepAliveFilter" />
+			</map>
+		</property>
+	</bean>
+	<!-- executorFilter多线程处理 -->
+	<bean id="executorFilter" class="org.apache.mina.filter.executor.ExecutorFilter" />
+	<bean id="mdcInjectionFilter" class="org.apache.mina.filter.logging.MdcInjectionFilter">
+		<constructor-arg value="remoteAddress" />
+	</bean>
+
+	<!--日志-->
+	<bean id="loggingFilter" class="org.apache.mina.filter.logging.LoggingFilter" />
+
+	<!--编解码-->
+	<bean id="codecFilter" class="org.apache.mina.filter.codec.ProtocolCodecFilter">
+		<constructor-arg>
+			<!--构造函数的参数传入自己实现的对象-->
+			<bean class="com.detection.interfaces.controller.mina.MyCodeFactory"></bean>
+		</constructor-arg>
+	</bean>
+
+	<!--心跳检测filter-->
+	<bean id="keepAliveFilter" class="org.apache.mina.filter.keepalive.KeepAliveFilter">
+		<!--构造函数的第一个参数传入自己实现的工厂-->
+		<constructor-arg>
+			<bean class="com.detection.interfaces.controller.mina.MyKeepAliveMessageFactory"></bean>
+		</constructor-arg>
+		<!--第二个参数需要的是IdleStatus对象，value值设置为读写空闲-->
+		<constructor-arg type = "org.apache.mina.core.session.IdleStatus" value="BOTH_IDLE" >
+		</constructor-arg>
+		<!--心跳频率，不设置则默认60s  -->
+		<!--5-->
+		<property name="requestInterval" value="5" />
+		<!--心跳超时时间，不设置则默认30s    -->
+		<!--30-->
+		<property name="requestTimeout" value="30" />
+		<!--不设置默认false-->
+		<property name="forwardEvent" value="true" />
+	</bean>
+
+
+
+
+	<mvc:annotation-driven>
+		<mvc:message-converters>
+			<bean class="org.springframework.http.converter.StringHttpMessageConverter">
+				<property name="supportedMediaTypes">
+					<list>
+						<value>text/plain;charset=UTF-8</value>
+						<value>text/html;charset=UTF-8</value>
+						<value>application/json; charset=UTF-8</value>
+						<value>application/x-www-form-urlencoded; charset=UTF-8</value>
+					</list>
+				</property>
+			</bean>
+			<bean
+					class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+				<property name="supportedMediaTypes">
+					<list>
+						<value>application/json; charset=UTF-8</value>
+						<value>application/x-www-form-urlencoded; charset=UTF-8</value>
+					</list>
+				</property>
+				<!-- 配置 objectMapper 为我们自定义扩展后的 CustomMapper -->
+				<property name="objectMapper">
+					<bean class="com.detection.interfaces.util.CustomMapper">
+					</bean>
+				</property>
+			</bean>
+		</mvc:message-converters>
+	</mvc:annotation-driven>
+
+
+
+	<!-- 对模型视图名称的解析，即在模型视图名称添加前后缀 -->
+	<bean
+			class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/WEB-INF/page/" />
+		<property name="suffix" value=".jsp" />
+	</bean>
+	<bean id="multipartResolver"
+		  class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="defaultEncoding">
+			<value>UTF-8</value>
+		</property>
+		<property name="maxUploadSize">
+			<value>32505856</value><!-- 上传文件大小限制为31M，31*1024*1024 -->
+		</property>
+		<property name="maxInMemorySize">
+			<value>4096</value>
+		</property>
+	</bean>
+
+	<!--<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/**" />
+			<bean class="RequestInterceptor">
+
+			</bean>
+		</mvc:interceptor>
+	</mvc:interceptors>-->
+
+</beans>

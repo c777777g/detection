@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.commonsl.dao.DeviceRecordDao">
+
+	<insert id="save" useGeneratedKeys="true" keyProperty="id" parameterType="com.commonsl.model.DeviceRecord">
+		INSERT INTO DEVICE_RECORD (
+			ID, CREATE_TIME, DEVICE_ADDRESS, DEVICE_ID, DEVICE_NAME, LATLNG, STATE
+		) VALUES (
+			#{id}, #{createTime}, #{deviceAddress}, #{deviceId}, #{deviceName}, #{latlng}, #{state}
+		)
+	</insert>
+
+	<delete id="delete" parameterType="com.commonsl.model.DeviceRecord">
+		DELETE FROM DEVICE_RECORD <include refid="CriteriaSQL" />
+	</delete>
+
+	<update id="update" parameterType="com.commonsl.model.DeviceRecord">
+		UPDATE DEVICE_RECORD <include refid="SetSQL" /> <include refid="CriteriaSQL" />
+	</update>
+  
+	<select id="selectCount" parameterType="com.commonsl.model.DeviceRecord" resultType="_long">
+		SELECT COUNT(1) FROM DEVICE_RECORD <include refid="CriteriaSQL" />
+	</select>
+
+	<select id="selectList" parameterType="com.commonsl.model.DeviceRecord" resultMap="DeviceRecordResultMap">
+		SELECT * FROM DEVICE_RECORD <include refid="CriteriaSQL" /> <include refid="OrderbySQL" /> <include refid="LimitSQL" />
+	</select>
+
+	<resultMap id="DeviceRecordResultMap" type="com.commonsl.model.DeviceRecord">
+		<id property="id" column="ID" />
+		<result property="createTime" column="CREATE_TIME" />
+		<result property="deviceAddress" column="DEVICE_ADDRESS" />
+		<result property="deviceId" column="DEVICE_ID" />
+		<result property="deviceName" column="DEVICE_NAME" />
+		<result property="latlng" column="LATLNG" />
+		<result property="state" column="STATE" />
+	</resultMap>
+
+	<sql id="SetSQL">
+		<set>
+			<if test="entity.createTime != null">CREATE_TIME = #{entity.createTime},</if>
+			<if test="entity.deviceAddress != null">DEVICE_ADDRESS = #{entity.deviceAddress},</if>
+			<if test="entity.deviceId != null">DEVICE_ID = #{entity.deviceId},</if>
+			<if test="entity.deviceName != null">DEVICE_NAME = #{entity.deviceName},</if>
+			<if test="entity.latlng != null">LATLNG = #{entity.latlng},</if>
+			<if test="entity.state != null">STATE = #{entity.state},</if>
+		</set>
+	</sql>
+
+	<sql id="CriteriaSQL">
+		<where>
+			<if test="criteria != null and criteria.notEmpty">
+				<foreach collection="criteria.criterions" item="criterion">
+					<choose>
+						<when test="criterion.noValue">
+							and ${criterion.field} ${criterion.condition}
+						</when>
+						<when test="criterion.singleValue">
+							and ${criterion.field} ${criterion.condition} #{criterion.value}
+						</when>
+						<when test="criterion.betweenValue">
+							and ${criterion.field} ${criterion.condition} #{criterion.value} and #{criterion.value2}
+						</when>
+						<when test="criterion.listValue">
+							and ${criterion.field} ${criterion.condition}
+							<foreach collection="criterion.value" item="item" open="(" separator="," close=")">
+								#{item}
+							</foreach>
+						</when>
+					</choose>
+				</foreach>
+			</if>
+		</where>
+	</sql>
+
+	<sql id="OrderbySQL">
+		<if test="criteria != null and criteria.orderly">
+			ORDER BY 
+			<foreach collection="criteria.orderbies" item="orderby" separator=",">
+				${orderby.field} ${orderby.value}
+			</foreach>
+		</if>
+	</sql>
+
+	<sql id="LimitSQL">
+		<if test="criteria != null and criteria.pagination">
+			LIMIT #{criteria.limit.value}, #{criteria.limit.value2}
+		</if>
+	</sql>
+
+</mapper>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.commonsl.dao.DeviceLimitDao">
+
+	<insert id="save" useGeneratedKeys="true" keyProperty="id" parameterType="com.commonsl.model.DeviceLimit">
+		INSERT INTO DEVICE_LIMIT (
+			ID, BODY_INDUCTO_ALARM, DEVICE_ID, HUMIDITY_ALARM, HUMIDITY_MAX, HUMIDITY_MIN, MODE, OPTICAL_INDUCTOR_ALARM, OPTICAL_INDUCTOR_MAX, OPTICAL_INDUCTOR_MIN, PM25_ALARM, PM25_MAX, PM25_MIN, SMOKE_SENSORS_ALARM, TEMPERATURE_ALARM, TEMPERATURE_MAX, TEMPERATURE_MIN
+		) VALUES (
+			#{id}, #{bodyInductoAlarm}, #{deviceId}, #{humidityAlarm}, #{humidityMax}, #{humidityMin}, #{mode}, #{opticalInductorAlarm}, #{opticalInductorMax}, #{opticalInductorMin}, #{pm25Alarm}, #{pm25Max}, #{pm25Min}, #{smokeSensorsAlarm}, #{temperatureAlarm}, #{temperatureMax}, #{temperatureMin}
+		)
+	</insert>
+
+	<delete id="delete" parameterType="com.commonsl.model.DeviceLimit">
+		DELETE FROM DEVICE_LIMIT <include refid="CriteriaSQL" />
+	</delete>
+
+	<update id="update" parameterType="com.commonsl.model.DeviceLimit">
+		UPDATE DEVICE_LIMIT <include refid="SetSQL" /> <include refid="CriteriaSQL" />
+	</update>
+  
+	<select id="selectCount" parameterType="com.commonsl.model.DeviceLimit" resultType="_long">
+		SELECT COUNT(1) FROM DEVICE_LIMIT <include refid="CriteriaSQL" />
+	</select>
+
+	<select id="selectList" parameterType="com.commonsl.model.DeviceLimit" resultMap="DeviceLimitResultMap">
+		SELECT * FROM DEVICE_LIMIT <include refid="CriteriaSQL" /> <include refid="OrderbySQL" /> <include refid="LimitSQL" />
+	</select>
+
+	<resultMap id="DeviceLimitResultMap" type="com.commonsl.model.DeviceLimit">
+		<id property="id" column="ID" />
+		<result property="bodyInductoAlarm" column="BODY_INDUCTO_ALARM" />
+		<result property="deviceId" column="DEVICE_ID" />
+		<result property="humidityAlarm" column="HUMIDITY_ALARM" />
+		<result property="humidityMax" column="HUMIDITY_MAX" />
+		<result property="humidityMin" column="HUMIDITY_MIN" />
+		<result property="mode" column="MODE" />
+		<result property="opticalInductorAlarm" column="OPTICAL_INDUCTOR_ALARM" />
+		<result property="opticalInductorMax" column="OPTICAL_INDUCTOR_MAX" />
+		<result property="opticalInductorMin" column="OPTICAL_INDUCTOR_MIN" />
+		<result property="pm25Alarm" column="PM25_ALARM" />
+		<result property="pm25Max" column="PM25_MAX" />
+		<result property="pm25Min" column="PM25_MIN" />
+		<result property="smokeSensorsAlarm" column="SMOKE_SENSORS_ALARM" />
+		<result property="temperatureAlarm" column="TEMPERATURE_ALARM" />
+		<result property="temperatureMax" column="TEMPERATURE_MAX" />
+		<result property="temperatureMin" column="TEMPERATURE_MIN" />
+	</resultMap>
+
+	<sql id="SetSQL">
+		<set>
+			<if test="entity.bodyInductoAlarm != null">BODY_INDUCTO_ALARM = #{entity.bodyInductoAlarm},</if>
+			<if test="entity.deviceId != null">DEVICE_ID = #{entity.deviceId},</if>
+			<if test="entity.humidityAlarm != null">HUMIDITY_ALARM = #{entity.humidityAlarm},</if>
+			<if test="entity.humidityMax != null">HUMIDITY_MAX = #{entity.humidityMax},</if>
+			<if test="entity.humidityMin != null">HUMIDITY_MIN = #{entity.humidityMin},</if>
+			<if test="entity.mode != null">MODE = #{entity.mode},</if>
+			<if test="entity.opticalInductorAlarm != null">OPTICAL_INDUCTOR_ALARM = #{entity.opticalInductorAlarm},</if>
+			<if test="entity.opticalInductorMax != null">OPTICAL_INDUCTOR_MAX = #{entity.opticalInductorMax},</if>
+			<if test="entity.opticalInductorMin != null">OPTICAL_INDUCTOR_MIN = #{entity.opticalInductorMin},</if>
+			<if test="entity.pm25Alarm != null">PM25_ALARM = #{entity.pm25Alarm},</if>
+			<if test="entity.pm25Max != null">PM25_MAX = #{entity.pm25Max},</if>
+			<if test="entity.pm25Min != null">PM25_MIN = #{entity.pm25Min},</if>
+			<if test="entity.smokeSensorsAlarm != null">SMOKE_SENSORS_ALARM = #{entity.smokeSensorsAlarm},</if>
+			<if test="entity.temperatureAlarm != null">TEMPERATURE_ALARM = #{entity.temperatureAlarm},</if>
+			<if test="entity.temperatureMax != null">TEMPERATURE_MAX = #{entity.temperatureMax},</if>
+			<if test="entity.temperatureMin != null">TEMPERATURE_MIN = #{entity.temperatureMin},</if>
+		</set>
+	</sql>
+
+	<sql id="CriteriaSQL">
+		<where>
+			<if test="criteria != null and criteria.notEmpty">
+				<foreach collection="criteria.criterions" item="criterion">
+					<choose>
+						<when test="criterion.noValue">
+							and ${criterion.field} ${criterion.condition}
+						</when>
+						<when test="criterion.singleValue">
+							and ${criterion.field} ${criterion.condition} #{criterion.value}
+						</when>
+						<when test="criterion.betweenValue">
+							and ${criterion.field} ${criterion.condition} #{criterion.value} and #{criterion.value2}
+						</when>
+						<when test="criterion.listValue">
+							and ${criterion.field} ${criterion.condition}
+							<foreach collection="criterion.value" item="item" open="(" separator="," close=")">
+								#{item}
+							</foreach>
+						</when>
+					</choose>
+				</foreach>
+			</if>
+		</where>
+	</sql>
+
+	<sql id="OrderbySQL">
+		<if test="criteria != null and criteria.orderly">
+			ORDER BY 
+			<foreach collection="criteria.orderbies" item="orderby" separator=",">
+				${orderby.field} ${orderby.value}
+			</foreach>
+		</if>
+	</sql>
+
+	<sql id="LimitSQL">
+		<if test="criteria != null and criteria.pagination">
+			LIMIT #{criteria.limit.value}, #{criteria.limit.value2}
+		</if>
+	</sql>
+
+</mapper>

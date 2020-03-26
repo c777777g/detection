@@ -1,0 +1,25 @@
+
+Json格式通信协议表格
+指向		备注
+连接服务器
+clien → server	{"opcode":"login","deviceId":"0001" ,"ip":"192.168.1.110"}	登陆信息
+server→ clien	{"opcode":"loginAnswer"," status ":" 1"," message ":" success "," datetime":1540435482000 }	服务返回状态
+
+message：描述
+如果失败服务器会断开连接
+心跳
+clien → server	{"opcode":"heartbeat"}	
+server→ clien	{"opcode":"heartbeat"}	
+
+
+检测数据上报
+clien → server	{"opcode":"reportedData","deviceId":"0001","temperature":20,"pm25":50,"humidity":50,"opticalInductor":50,"illuminatingBrightness":0,"latlng":"[23.1666981,113.429923]","bodyInductor":0,"smokeSensors":0}	详情看参数表
+
+协议含有相关字段则开启该功能
+server→ clien	{"opcode":"setIP","deviceId":"xxx"," IPAddress ":"192.168.1.68"," subnetMask":"255.255.255.0"," gateway":"192.168.1.1" }	详情看参数表，
+
+		
+UDP广播修改服务器地址
+server → 局域网	{"opcode":"spotServer","ip":"192.168.1.50","port":"7777"}	udp接收端口是
+7776
+

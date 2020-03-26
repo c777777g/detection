@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.commonsl.dao.UserDao">
+
+	<insert id="save" useGeneratedKeys="true" keyProperty="id" parameterType="com.commonsl.model.User">
+		INSERT INTO USER (
+			ID, ALIAS, CREATION_TIME, EMAIL, LANDING_TIME, NOTE, PHONE, ROLE, STATE, USER_NAME, USER_PASSWORD, WX_ACCOUNT
+		) VALUES (
+			#{id}, #{alias}, #{creationTime}, #{email}, #{landingTime}, #{note}, #{phone}, #{role}, #{state}, #{userName}, #{userPassword}, #{wxAccount}
+		)
+	</insert>
+
+	<delete id="delete" parameterType="com.commonsl.model.User">
+		DELETE FROM USER <include refid="CriteriaSQL" />
+	</delete>
+
+	<update id="update" parameterType="com.commonsl.model.User">
+		UPDATE USER <include refid="SetSQL" /> <include refid="CriteriaSQL" />
+	</update>
+  
+	<select id="selectCount" parameterType="com.commonsl.model.User" resultType="_long">
+		SELECT COUNT(1) FROM USER <include refid="CriteriaSQL" />
+	</select>
+
+	<select id="selectList" parameterType="com.commonsl.model.User" resultMap="UserResultMap">
+		SELECT * FROM USER <include refid="CriteriaSQL" /> <include refid="OrderbySQL" /> <include refid="LimitSQL" />
+	</select>
+
+	<resultMap id="UserResultMap" type="com.commonsl.model.User">
+		<id property="id" column="ID" />
+		<result property="alias" column="ALIAS" />
+		<result property="creationTime" column="CREATION_TIME" />
+		<result property="email" column="EMAIL" />
+		<result property="landingTime" column="LANDING_TIME" />
+		<result property="note" column="NOTE" />
+		<result property="phone" column="PHONE" />
+		<result property="role" column="ROLE" />
+		<result property="state" column="STATE" />
+		<result property="userName" column="USER_NAME" />
+		<result property="userPassword" column="USER_PASSWORD" />
+		<result property="wxAccount" column="WX_ACCOUNT" />
+	</resultMap>
+
+	<sql id="SetSQL">
+		<set>
+			<if test="entity.alias != null">ALIAS = #{entity.alias},</if>
+			<if test="entity.creationTime != null">CREATION_TIME = #{entity.creationTime},</if>
+			<if test="entity.email != null">EMAIL = #{entity.email},</if>
+			<if test="entity.landingTime != null">LANDING_TIME = #{entity.landingTime},</if>
+			<if test="entity.note != null">NOTE = #{entity.note},</if>
+			<if test="entity.phone != null">PHONE = #{entity.phone},</if>
+			<if test="entity.role != null">ROLE = #{entity.role},</if>
+			<if test="entity.state != null">STATE = #{entity.state},</if>
+			<if test="entity.userName != null">USER_NAME = #{entity.userName},</if>
+			<if test="entity.userPassword != null">USER_PASSWORD = #{entity.userPassword},</if>
+			<if test="entity.wxAccount != null">WX_ACCOUNT = #{entity.wxAccount},</if>
+		</set>
+	</sql>
+
+	<sql id="CriteriaSQL">
+		<where>
+			<if test="criteria != null and criteria.notEmpty">
+				<foreach collection="criteria.criterions" item="criterion">
+					<choose>
+						<when test="criterion.noValue">
+							and ${criterion.field} ${criterion.condition}
+						</when>
+						<when test="criterion.singleValue">
+							and ${criterion.field} ${criterion.condition} #{criterion.value}
+						</when>
+						<when test="criterion.betweenValue">
+							and ${criterion.field} ${criterion.condition} #{criterion.value} and #{criterion.value2}
+						</when>
+						<when test="criterion.listValue">
+							and ${criterion.field} ${criterion.condition}
+							<foreach collection="criterion.value" item="item" open="(" separator="," close=")">
+								#{item}
+							</foreach>
+						</when>
+					</choose>
+				</foreach>
+			</if>
+		</where>
+	</sql>
+
+	<sql id="OrderbySQL">
+		<if test="criteria != null and criteria.orderly">
+			ORDER BY 
+			<foreach collection="criteria.orderbies" item="orderby" separator=",">
+				${orderby.field} ${orderby.value}
+			</foreach>
+		</if>
+	</sql>
+
+	<sql id="LimitSQL">
+		<if test="criteria != null and criteria.pagination">
+			LIMIT #{criteria.limit.value}, #{criteria.limit.value2}
+		</if>
+	</sql>
+
+</mapper>

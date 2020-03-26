@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.commonsl.dao.impl.ReportFormsDaoImpl2">
+
+	<insert id="saveAll" parameterType="java.util.List">
+		INSERT INTO REPORT_FORMS (
+			 BODY_INDUCTOR, CREATE_DATE, DEVICE_ID, HUMIDITY, ILLUMINATING_BRIGHTNESS, OPTICAL_INDUCTOR, PM25, SMOKE_SENSORS, TEMPERATURE
+		) VALUES
+		<foreach collection="list" item="item" index="index" separator=",">
+			(#{item.bodyInductor}, #{item.createDate}, #{item.deviceId}, #{item.humidity}, #{item.illuminatingBrightness}, #{item.opticalInductor}, #{item.pm25}, #{item.smokeSensors}, #{item.temperature})
+		</foreach>
+	</insert>
+
+	<update id="batchUpdate">
+		<foreach collection="list" separator=";" index="index" item="item" open="" close="">
+			UPDATE REPORT_FORMS
+			<set>
+				BODY_INDUCTOR = #{item.bodyInductor},
+				CREATE_DATE = #{item.createDate},
+				HUMIDITY = #{item.humidity},
+				ILLUMINATING_BRIGHTNESS = #{item.illuminatingBrightness},
+				OPTICAL_INDUCTOR = #{item.opticalInductor},
+				PM25 = #{item.pm25},
+				SMOKE_SENSORS = #{item.smokeSensors},
+				TEMPERATURE = #{item.temperature}
+			</set>
+			where DEVICE_ID = #{item.deviceId}
+			and CREATE_DATE BETWEEN #{startDate} AND #{endDate}
+		</foreach>
+	</update>
+
+</mapper>
